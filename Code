@@ -1,0 +1,121 @@
+pos_roots_via_simples := function(L) #Shows positive roots as sum of simple roots
+	local R, S, Rpos, V, B, C, i;
+	R:=RootSystem(L);
+	S:=SimpleSystem(R);
+	Rpos:=PositiveRoots(R);
+	V:=VectorSpace(Rationals,S);
+	B:=Basis(V,S);
+	C:=CartanMatrix(R);
+	
+	for i in [1..Length(Rpos)] do
+		Print(Coefficients(B,Rpos[i]), "\n");
+	od;
+end;
+
+sums := function(L) #Computes the sums for each subset I of simple roots, depending on Lie algebra L
+	local R, S, Rpos, V, B, C, i, j, k, I, myroots, SI, checkj, differences, differencesindex, equalitycheck, s, v1, v2, verify;
+	differences:=[];
+	differencesindex:=[];
+	verify:=0;
+	
+	R:=RootSystem(L);
+	S:=SimpleSystem(R);
+	Rpos:=PositiveRoots(R);
+	V:=VectorSpace(Rationals,S);
+	B:=Basis(V,S);
+	C:=CartanMatrix(R);
+	
+	for I in IteratorOfCombinations([1..Length(S)]) do
+		if Length(I)=Length(S) then
+		else
+			SI:=Difference([1..Length(S)],I);
+			myroots:=[];
+			for k in [1..Length(Rpos)] do 
+				checkj:=0;
+				for j in SI do
+					if Coefficients(B,Rpos[k])[j]=0 then
+					else
+						if checkj=0 then
+							Add(myroots,Coefficients(B,Rpos[k])); #this is obtaining the positive roots which are not in the R_I root system
+							checkj:=1;
+						fi;
+					fi;
+				od;
+			od;
+			
+			Print(Length(myroots),"\n");
+			
+			v1:=[];
+			for j in [1..Length(S)] do
+				Add(v1,0);
+			od;
+			for j in [1..Length(myroots)] do
+				v1 := v1+myroots[j];
+			od;
+			
+			s:=0;
+			for j in SI do
+				s := s+(v1*C*Coefficients(B,Rpos[j])); #this is adding up the sum of root/dual root pairings
+			od;
+			
+			#Print(I, " ", s, " ", Length(myroots)+Length(SI), "\n");
+			if s <= Length(myroots)+Length(SI) then
+			else
+				verify:=1; #this is checking the inequality
+			fi;
+			Add(differences,Length(myroots)+Length(SI)-s);
+			Add(differencesindex,SI);
+		fi;
+	od;
+	
+	if verify=0 then
+		equalitycheck:=0;
+		Print("All good! Equality when S\I is ");
+		for j in [1..Length(differences)] do
+			if differences[j]=0 then
+				equalitycheck:=1;
+				Print(differencesindex[j]); #checking for when the inequality is actually equality
+			fi;
+		od;
+		if equalitycheck=1 then
+			Print(" where S is ", [1..Length(S)]);
+		fi;
+	else
+		Print("NOOOOOOOOOOOOOOOOOOOOOO");
+	fi;
+end;
+
+run_it := function(n) #Checks all the sums for all Lie algebras, where type A-D are up to the input n
+	local i;
+	
+	for i in [1..n] do
+		Print("A: ");
+		sums(SimpleLieAlgebra("A",i,Rationals));
+		Print("\n");
+	od;
+	for i in [2..n] do
+		Print("B: ");
+		sums(SimpleLieAlgebra("B",i,Rationals));
+		Print("\n");
+	od;
+	for i in [2..n] do
+		Print("C: ");
+		sums(SimpleLieAlgebra("C",i,Rationals));
+		Print("\n");
+	od;
+	for i in [4..n] do
+		Print("D: ");
+		sums(SimpleLieAlgebra("D",i,Rationals));
+		Print("\n");
+	od;
+	for i in [6..8] do
+		Print("E: ");
+		sums(SimpleLieAlgebra("E",i,Rationals));
+		Print("\n");
+	od;
+	Print("F: ");
+	sums(SimpleLieAlgebra("F",4,Rationals));
+	Print("\n");
+	Print("G: ");
+	sums(SimpleLieAlgebra("G",2,Rationals));
+end;
